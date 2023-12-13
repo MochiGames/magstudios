@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -15,9 +14,9 @@
       font-family: 'Silkscreen', monospace;
     }
 
-    h1 {
+    #header {
+      margin-top: 20px;
       font-size: 36px;
-      margin-bottom: 20px;
     }
 
     .ferrari-red {
@@ -28,22 +27,29 @@
       color: #f1c40f; /* Ferrari Yellow */
     }
 
-    #board {
+    #game-board {
       display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-gap: 5px;
+      grid-template-columns: repeat(20, 20px);
+      grid-gap: 1px;
     }
 
     .cell {
-      width: 100px;
-      height: 100px;
+      width: 20px;
+      height: 20px;
       background-color: #dc0000; /* Ferrari Red */
+      border: 1px solid #fff;
+    }
+
+    .snake {
+      background-color: #f1c40f; /* Ferrari Yellow */
+    }
+
+    .food {
+      background-color: #fff;
+      font-size: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 32px;
-      color: #f1c40f; /* Ferrari Yellow */
-      cursor: pointer;
     }
 
     #message {
@@ -53,7 +59,8 @@
     }
 
     #play-again {
-      margin-top: 10px;
+      margin-top: auto;
+      margin-bottom: 20px;
       background-color: #dc0000; /* Ferrari Red */
       color: #f1c40f; /* Ferrari Yellow */
       padding: 10px;
@@ -62,92 +69,161 @@
       font-size: 18px;
     }
   </style>
-  <title>Tic Tac Toe</title>
+  <title>Ferrari Snake</title>
 </head>
 <body>
 
-<h1><span class="ferrari-red">Ferrari</span> <span class="ferrari-yellow">Games</span></h1>
-<div id="board"></div>
+<div id="header"><span class="ferrari-red">Ferrari</span> <span class="ferrari-yellow">Games</span></div>
+<div id="game-board"></div>
 <div id="message"></div>
 <button id="play-again" class="ferrari-red">Play Again</button>
 
 <script>
-  const board = document.getElementById('board');
+  const gameBoard = document.getElementById('game-board');
   const message = document.getElementById('message');
   const playAgainBtn = document.getElementById('play-again');
-  const cells = Array.from({ length: 9 }, (_, index) => createCell(index));
+  const gridSize = 20;
+  const cells = Array.from({ length: gridSize * gridSize }, (_, index) => createCell(index));
 
-  let gameActive = true;
+  let snake = [{ x: 10, y: 10 }];
+  let direction = 'right';
+  let food = {};
+  let gameActive = false;
 
   function createCell(index) {
     const cell = document.createElement('div');
     cell.classList.add('cell');
     cell.dataset.index = index;
-    cell.addEventListener('click', () => handleCellClick(index));
-    board.appendChild(cell);
+    gameBoard.appendChild(cell);
     return cell;
   }
 
-  function handleCellClick(index) {
-    if (!gameActive) return;
+  function renderSnake() {
+    cells.forEach(cell => cell.classList.remove('snake'));
 
-    const currentPlayer = board.dataset.currentPlayer || 'X';
-    if (!cells[index].innerText) {
-      cells[index].innerText = currentPlayer;
-      board.dataset.currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    snake.forEach(segment => {
+      const index = segment.x + segment.y * gridSize;
+      cells[index].classList.add('snake');
+    });
+  }
 
-      if (checkWin()) {
-        displayMessage(`${currentPlayer} has won the game!`);
-        gameActive = false;
-      } else if (checkDraw()) {
-        displayMessage("It's a draw!");
-        gameActive = false;
-      }
+  function renderFood() {
+    const index = food.x + food.y * gridSize;
+    const foodCell = cells[index];
+    foodCell.innerHTML = '🍎';
+    foodCell.classList.add('food');
+  }
+
+  function handleKeyPress(event) {
+    if (!gameActive) {
+      startGame();
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'w':
+        direction = 'up';
+        break;
+      case 'ArrowDown':
+      case 's':
+        direction = 'down';
+        break;
+      case 'ArrowLeft':
+      case 'a':
+        direction = 'left';
+        break;
+      case 'ArrowRight':
+      case 'd':
+        direction = 'right';
+        break;
     }
   }
 
-  function checkWin() {
-    const winPatterns = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],
-      [0, 4, 8], [2, 4, 6]
-    ];
+  function moveSnake() {
+    const head = { ...snake[0] };
 
-    for (const pattern of winPatterns) {
-      const [a, b, c] = pattern;
-      if (cells[a].innerText && cells[a].innerText === cells[b].innerText && cells[a].innerText === cells[c].innerText) {
-        highlightWinningCells(pattern);
-        return true;
-      }
+    switch (direction) {
+      case 'up':
+        head.y = (head.y - 1 + gridSize) % gridSize;
+        break;
+      case 'down':
+        head.y = (head.y + 1) % gridSize;
+        break;
+      case 'left':
+        head.x = (head.x - 1 + gridSize) % gridSize;
+        break;
+      case 'right':
+        head.x = (head.x + 1) % gridSize;
+        break;
     }
 
-    return false;
+    snake.unshift(head);
+
+    if (checkCollision()) {
+      displayMessage("Game Over! 🐍");
+      gameActive = false;
+    } else if (checkFood()) {
+      generateFood();
+    } else {
+      snake.pop();
+    }
+
+    renderSnake();
   }
 
-  function checkDraw() {
-    return cells.every(cell => cell.innerText !== '');
+  function checkCollision() {
+    const head = snake[0];
+    return snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y);
   }
 
-  function highlightWinningCells(pattern) {
-    pattern.forEach(index => cells[index].classList.add('win-cell'));
+  function checkFood() {
+    const head = snake[0];
+    return head.x === food.x && head.y === food.y;
+  }
+
+  function generateFood() {
+    const emptyCells = cells.filter(cell => !cell.classList.contains('snake') && !cell.classList.contains('food'));
+    if (emptyCells.length === 0) {
+      displayMessage("You won! 🏆");
+      gameActive = false;
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const { x, y } = getCoordinatesFromIndex(emptyCells[randomIndex].dataset.index);
+    food = { x, y };
+
+    renderFood();
+  }
+
+  function getCoordinatesFromIndex(index) {
+    const cellIndex = parseInt(index, 10);
+    const x = cellIndex % gridSize;
+    const y = Math.floor(cellIndex / gridSize);
+    return { x, y };
   }
 
   function displayMessage(msg) {
     message.innerText = msg;
   }
 
-  function resetBoard() {
-    cells.forEach(cell => {
-      cell.innerText = '';
-      cell.classList.remove('win-cell');
-    });
-
-    board.dataset.currentPlayer = 'X';
-    message.innerText = '';
+  function startGame() {
+    snake = [{ x: 10, y: 10 }];
+    direction = 'right';
+    food = {};
     gameActive = true;
+    displayMessage('');
+    renderSnake();
+    generateFood();
   }
 
-  playAgainBtn.addEventListener('click', resetBoard);
+  function resetGame() {
+    startGame();
+  }
+
+  playAgainBtn.addEventListener('click', resetGame);
+  document.addEventListener('keydown', handleKeyPress);
 </script>
 
 </body>
