@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap">
+  <link rel="icon" href="https://i.ibb.co/kq3XxV8/Screenshot-2023-12-15-133717.png" type="image/png">
+  <style>
+    body {
+      background-color: #09a4f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Comfortaa', cursive;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    #cookie-container {
+      margin-top: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #cookie {
+      width: 150px;
+      height: 150px;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      color: #09a4f2;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border-radius: 50%;
+      margin-bottom: 20px;
+      animation: bounce 0.5s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(-10px);
+      }
+    }
+
+    #score,
+    #cps,
+    #worker-info,
+    #mice-info,
+    #workers,
+    #mice,
+    #reset,
+    #rename-input,
+    #factory-name,
+    #cheat-menu {
+      margin-top: 20px;
+    }
+
+    .buy-btn,
+    .cheat-btn,
+    #reset {
+      background-color: #09a4f2;
+      color: #fff;
+      padding: 10px;
+      cursor: pointer;
+      border: none;
+      font-size: 18px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      animation: fadeIn 1s ease-in-out;
+      border-radius: 10px;
+    }
+
+    #rename-input {
+      padding: 5px;
+      font-size: 16px;
+      text-align: center;
+      background-color: #fff;
+      color: #09a4f2;
+      border: none;
+      border-radius: 5px;
+      opacity: 0.8;
+    }
+
+    #cheat-menu {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .cheat-input {
+      margin-top: 5px;
+      padding: 5px;
+      font-size: 14px;
+      text-align: center;
+      background-color: #fff;
+      color: #09a4f2;
+      border: none;
+      border-radius: 5px;
+      opacity: 0.8;
+      width: 60px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+  <title>mag studios</title>
+</head>
+
+<body>
+
+  <h1 id="factory-name" onclick="renameFactory()">Your Cookie Factory</h1>
+  <div id="cookie-container">
+    <div id="cookie" onclick="incrementScore()">🍪</div>
+    <div id="score">Cookies: <span id="current-score">0</span></div>
+    <div id="cps">Cookies per Second: <span id="cookies-per-second">0</span></div>
+    <button id="worker-btn" class="buy-btn" onclick="buyWorker()">Buy Worker ㅤ<br><span id="worker-price">20</span>-<span id="worker-max-price">40 ㅤ</span> Cookies</button>
+    <div id="worker-info"></div>
+    <div id="workers">Workers: <span id="worker-count">0</span></div>
+    <button id="mice-btn" class="buy-btn" onclick="buyMice()">Buy Mice ㅤ<br><span id="mice-price">20</span>-<span id="mice-max-price">40 ㅤ</span> Cookies</button>
+    <div id="mice-info"></div>
+    <div id="mice">Mice: <span id="mice-count">0</span></div>
+    <button id="reset" onclick="resetGame()">Reset Game</button>
+    <input type="text" id="rename-input" placeholder="Rename Your Factory" onkeydown="if (event.key === 'Enter') renameFactory()">
+    <div id="cheat-menu">
+      <h2>mag admin</h2>
+      <button class="cheat-btn" onclick="setCookieCount()">Set Cookie Count ㅤ<input class="cheat-input" type="text" id="cookie-count-input" value="0"></button>
+      <button class="cheat-btn" onclick="setWorkerCount()">Set Worker Count ㅤ <input class="cheat-input" type="text" id="worker-count-input" value="0"></button>
+      <button class="cheat-btn" onclick="setMiceCount()">Set Mice Count ㅤ<input class="cheat-input" type="text" id="mice-count-input" value="0"></button>
+    </div>
+  </div>
+  <div id="copyright">© 2022-2024 Mag Studios AB | Registered in Sweden</div>
+
+  <script>
+    let score = 0;
+    let workers = 0;
+    let workerPrice = 20;
+    let workerMaxPrice = 40;
+    let workerCPS = 0;
+
+    let mice = 0;
+    let micePrice = 20;
+    let miceMaxPrice = 40;
+    let miceCPS = 0;
+
+    let factoryName = "Your Cookie Factory";
+
+    function incrementScore() {
+      score++;
+      updateScore();
+    }
+
+    function buyWorker() {
+      const randomPriceIncrease = Math.floor(Math.random() * 6) + 1;
+      const newWorkerPrice = workerPrice + randomPriceIncrease;
+
+      if (score >= newWorkerPrice) {
+        score -= newWorkerPrice;
+        workers++;
+        workerCPS = Math.floor(Math.random() * 6) + 1;
+        updateScore();
+        updateCPS();
+        updateWorkerInfo(newWorkerPrice, workerCPS);
+        updateWorkerCount();
+        updateWorkerPrice(newWorkerPrice);
+        setInterval(() => incrementScore(), 1000);
+      } else {
+        alert("Not enough cookies to buy a worker!");
+      }
+    }
+
+    function buyMice() {
+      const randomPriceIncrease = Math.floor(Math.random() * 21) + 20;
+      const newMicePrice = micePrice + randomPriceIncrease;
+
+      if (score >= newMicePrice) {
+        score -= newMicePrice;
+        mice++;
+        miceCPS = Math.floor(Math.random() * 21) + 20;
+        updateScore();
+        updateCPS();
+        updateMiceInfo(newMicePrice, miceCPS);
+        updateMiceCount();
+        updateMicePrice(newMicePrice);
+        setInterval(() => incrementScore(), 1000);
+      } else {
+        alert("Not enough cookies to buy mice!");
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('current-score').innerText = score;
+    }
+
+    function updateCPS() {
+      document.getElementById('cookies-per-second').innerText = workers * workerCPS + mice * miceCPS;
+    }
+
+    function updateWorkerInfo(price, cps) {
+      document.getElementById('worker-info').innerText = `Worker CPS: ${cps} Cookies per Second (Cost: ${price} Cookies)`;
+    }
+
+    function updateMiceInfo(price, cps) {
+      document.getElementById('mice-info').innerText = `Mice CPS: ${cps} Cookies per Second (Cost: ${price} Cookies)`;
+    }
+
+    function updateWorkerCount() {
+      document.getElementById('worker-count').innerText = workers;
+    }
+
+    function updateMiceCount() {
+      document.getElementById('mice-count').innerText = mice;
+    }
+
+    function updateWorkerPrice(price) {
+      document.getElementById('worker-price').innerText = price;
+    }
+
+    function updateMicePrice(price) {
+      document.getElementById('mice-price').innerText = price;
+    }
+
+    function renameFactory() {
+      const newName = document.getElementById('rename-input').value;
+      if (newName) {
+        factoryName = newName;
+        document.getElementById('factory-name').innerText = factoryName;
+        if (newName.toLowerCase() === "mag studios") {
+          document.getElementById('cheat-menu').style.display = 'flex';
+        } else {
+          document.getElementById('cheat-menu').style.display = 'none';
+        }
+      }
+    }
+
+    function resetGame() {
+      score = 0;
+      workers = 0;
+      workerPrice = 20;
+      workerMaxPrice = 40;
+      workerCPS = 0;
+
+      mice = 0;
+      micePrice = 20;
+      miceMaxPrice = 40;
+      miceCPS = 0;
+
+      updateScore();
+      updateCPS();
+      updateWorkerInfo(workerPrice, workerCPS);
+      updateMiceInfo(micePrice, miceCPS);
+      updateWorkerCount();
+      updateMiceCount();
+      updateWorkerPrice(workerPrice);
+      updateMicePrice(micePrice);
+
+      clearInterval(intervalId);
+    }
+
+    let intervalId = setInterval(() => incrementScore(), 1000);
+
+    // Cheat functions
+    function setCookieCount() {
+      const count = document.getElementById('cookie-count-input').value;
+      if (!isNaN(count) && count !== null) {
+        score = parseInt(count);
+        updateScore();
+      }
+    }
+
+    function setWorkerCount() {
+      const count = document.getElementById('worker-count-input').value;
+      if (!isNaN(count) && count !== null) {
+        const addedWorkers = parseInt(count);
+        workers += addedWorkers;
+
+        for (let i = 0; i < addedWorkers; i++) {
+          const randomPriceIncrease = Math.floor(Math.random() * 6) + 1;
+          const newWorkerPrice = workerPrice + randomPriceIncrease;
+
+          score -= newWorkerPrice;
+          workerCPS = Math.floor(Math.random() * 6) + 1;
+          updateScore();
+          updateCPS();
+          updateWorkerInfo(newWorkerPrice, workerCPS);
+          updateWorkerCount();
+          updateWorkerPrice(newWorkerPrice);
+          setInterval(() => incrementScore(), 1000);
+        }
+
+        updateWorkerCount();
+      }
+    }
+
+    function setMiceCount() {
+      const count = document.getElementById('mice-count-input').value;
+      if (!isNaN(count) && count !== null) {
+        const addedMice = parseInt(count);
+        mice += addedMice;
+
+        for (let i = 0; i < addedMice; i++) {
+          const randomPriceIncrease = Math.floor(Math.random() * 21) + 20;
+          const newMicePrice = micePrice + randomPriceIncrease;
+
+          score -= newMicePrice;
+          miceCPS = Math.floor(Math.random() * 21) + 20;
+          updateScore();
+          updateCPS();
+          updateMiceInfo(newMicePrice, miceCPS);
+          updateMiceCount();
+          updateMicePrice(newMicePrice);
+          setInterval(() => incrementScore(), 1000);
+        }
+
+        updateMiceCount();
+      }
+    }
+  </script>
+
+</body>
+
+</html>
