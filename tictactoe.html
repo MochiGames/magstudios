@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap">
+  <link rel="icon" href="https://i.ibb.co/kq3XxV8/Screenshot-2023-12-15-133717.png" type="image/png">
+  <style>
+    body {
+      background-color: #09a4f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Comfortaa', cursive;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    .ferrari-red {
+      color: #09a4f2; /* New Blue Color */
+    }
+
+    .ferrari-yellow {
+      color: #09a4f2; /* New Blue Color */
+    }
+
+    #mag-studios {
+      font-size: 24px;
+      color: #fff; /* White Text */
+      margin-bottom: 10px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #fff; /* White Tiles */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      color: #09a4f2; /* New Blue Color for X's and O's */
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px; /* Rounded corners */
+    }
+
+    .cell .symbol {
+      position: absolute;
+      opacity: 0;
+      animation: fadeIn 0.3s ease-in-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .win-cell {
+      background-color: #09a4f2; /* Highlight Blue Color for Winning Cells */
+      color: #fff; /* White Text for Winning Cells */
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #fff; /* White Text */
+    }
+
+    #play-again {
+      margin-top: 10px;
+      background-color: #09a4f2; /* New Blue Color for Button Background */
+      color: #fff; /* White Button Text */
+      padding: 10px;
+      cursor: pointer;
+      border: none;
+      font-size: 18px;
+      border-radius: 10px; /* Rounded corners for the button */
+    }
+
+    #copyright {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #fff; /* White Text for Copyright */
+    }
+  </style>
+  <title>Tic Tac Toe - Mag Studios</title>
+</head>
+<body>
+
+<h1><span class="ferrari-red">Mag</span> <span class="ferrari-yellow">Studios</span></h1>
+<div id="mag-studios">mag studios</div>
+<div id="board"></div>
+<div id="message"></div>
+<button id="play-again" class="ferrari-red">Play Again</button>
+<div id="copyright">© 2022-2024 Mag Studios AB | Registered in Sweden</div>
+
+<script>
+  const board = document.getElementById('board');
+  const message = document.getElementById('message');
+  const playAgainBtn = document.getElementById('play-again');
+  const cells = Array.from({ length: 9 }, (_, index) => createCell(index));
+
+  let gameActive = true;
+
+  function createCell(index) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.index = index;
+    cell.addEventListener('click', () => handleCellClick(index));
+    const symbol = document.createElement('div');
+    symbol.classList.add('symbol');
+    cell.appendChild(symbol);
+    board.appendChild(cell);
+    return cell;
+  }
+
+  function handleCellClick(index) {
+    if (!gameActive) return;
+
+    const currentPlayer = board.dataset.currentPlayer || 'X';
+    if (!cells[index].innerText) {
+      const symbol = document.createElement('div');
+      symbol.classList.add('symbol');
+      symbol.innerText = currentPlayer;
+      cells[index].appendChild(symbol);
+
+      board.dataset.currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+      if (checkWin()) {
+        displayMessage(`${currentPlayer} has won the game!`);
+        gameActive = false;
+      } else if (checkDraw()) {
+        displayMessage("It's a draw!");
+        gameActive = false;
+      }
+    }
+  }
+
+  function checkWin() {
+    const winPatterns = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (const pattern of winPatterns) {
+      const [a, b, c] = pattern;
+      if (cells[a].innerText && cells[a].innerText === cells[b].innerText && cells[a].innerText === cells[c].innerText) {
+        highlightWinningCells(pattern);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function checkDraw() {
+    return cells.every(cell => cell.innerText !== '');
+  }
+
+  function highlightWinningCells(pattern) {
+    pattern.forEach(index => cells[index].classList.add('win-cell'));
+  }
+
+  function displayMessage(msg) {
+    message.innerText = msg;
+  }
+
+  function resetBoard() {
+    cells.forEach(cell => {
+      cell.innerHTML = '';
+      cell.classList.remove('win-cell');
+    });
+
+    board.dataset.currentPlayer = 'X';
+    message.innerText = '';
+    gameActive = true;
+  }
+
+  playAgainBtn.addEventListener('click', resetBoard);
+</script>
+
+</body>
+</html>
+
+
